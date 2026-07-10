@@ -65,14 +65,18 @@ def download_youtube_file(url, is_video=False):
         'ignoreerrors': True,
         'source_address': '0.0.0.0',
         
-        # ✅ إضافة ملف الكوكيز
+        # ✅ استخدام ملف الكوكيز الموجود جنب الملف
         'cookiefile': 'cookies.txt',
         
         # التنكر كشاشة سمارت وموبايل أبل لكسر حظر الروبوت
         'extractor_args': {
             'youtube': {
                 'client': ['tv', 'ios', 'android'],
-                'player_client': ['tv', 'ios']
+                'player_client': ['tv', 'ios'],
+                'skip': ['dash', 'hls'],
+                'player_skip': ['js', 'configs'],
+                'js_runtimes': ['deno'],  # استخدم Deno
+                'remote_components': ['ejs:github'],  # حمل EJS من GitHub
             }
         },
         'http_headers': {
