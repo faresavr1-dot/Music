@@ -21,8 +21,8 @@ if not saved_vars:
     saved_vars["BOT_TOKEN"] = input("👉 3. أدخل BOT_TOKEN: ").strip()
     saved_vars["OWNER_ID"] = input("👉 4. أدخل OWNER_ID (أيدي المطور): ").strip()
     saved_vars["STORAGE_CHANNEL"] = input("👉 5. أدخل رابط قناة التخزين (STORAGE_CHANNEL): ").strip()
-    saved_vars["COOKIE_DATA"] = input("👉 6. أدخل بيانات الـ COOKIE (اختياري - اضغط Enter للتخطي): ").strip()
-
+    # ✅ تم إزالة طلب الـ COOKIE نهائياً
+    
     # حفظ المدخلات في ملف محلي
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump(saved_vars, f, ensure_ascii=False, indent=4)
@@ -34,7 +34,7 @@ API_HASH = saved_vars.get("API_HASH", "")
 BOT_TOKEN = saved_vars.get("BOT_TOKEN", "")
 OWNER_ID = int(saved_vars.get("OWNER_ID", 0)) if saved_vars.get("OWNER_ID") else 0
 STORAGE_CHANNEL_LINK = saved_vars.get("STORAGE_CHANNEL", "").strip()
-COOKIE_DATA = saved_vars.get("COOKIE_DATA", "").strip()
+# ✅ تم إزالة COOKIE_DATA نهائياً
 
 bot = None
 assistant_client = None
