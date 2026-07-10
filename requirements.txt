@@ -1,0 +1,7 @@
+Pyrogram==2.0.106
+py-tgcalls==2.2.11
+yt-dlp>=2024.04.09
+tgcrypto
+Telethon
+pydub
+psutil
