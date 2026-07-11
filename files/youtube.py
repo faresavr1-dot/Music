@@ -1,3 +1,4 @@
+# files/youtube.py
 import os
 import yt_dlp
 from files import config
@@ -6,11 +7,11 @@ import urllib.parse
 import json
 import re
 
-# مفتاح الـ API الخاص بك للبحث السريع
+# مفتاح الـ API للبحث
 YOUTUBE_API_KEY = "AIzaSyCMhGUJzN_AEfvKGU28z4VwvwX-i4U-nO4"
 
 def get_youtube_info(query):
-    # ================= البحث عبر الـ API (سريع جداً ومستحيل يتحظر) =================
+    """جلب معلومات الفيديو عبر API Key"""
     try:
         search_url = f"https://www.googleapis.com/youtube/v3/search?part=snippet&q={urllib.parse.quote(query)}&type=video&key={YOUTUBE_API_KEY}&maxResults=1"
         req = urllib.request.Request(search_url)
@@ -21,6 +22,7 @@ def get_youtube_info(query):
             video_id = search_data["items"][0]["id"]["videoId"]
             title = search_data["items"][0]["snippet"]["title"]
             
+            # جلب المدة
             video_url = f"https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id={video_id}&key={YOUTUBE_API_KEY}"
             duration = 0
             try:
@@ -45,50 +47,52 @@ def get_youtube_info(query):
                 "url": f"https://www.youtube.com/watch?v={video_id}"
             }
     except Exception as e:
-        print(f"API Failed: {e}")
-    return None 
+        print(f"API Search Error: {e}")
+    
+    return None
 
 # ========================================================
-# دوال التحميل والحفظ (الخدعة الكبرى)
+# التحميل بدون كوكيز (أكثر استقراراً)
 # ========================================================
 
 def download_youtube_file(url, is_video=False):
     if not os.path.exists("downloads"):
         os.makedirs("downloads")
         
-    # 🔥 إعدادات التحميل مع دعم الـ Cookies 🔥
     ydl_opts = {
-        'quiet': True,
-        'no_warnings': True,
+        'quiet': False,
+        'no_warnings': False,
         'nocheckcertificate': True,
         'geo_bypass': True,
         'ignoreerrors': True,
         'source_address': '0.0.0.0',
         
-        # ✅ استخدام ملف الكوكيز الموجود جنب الملف
-        'cookiefile': 'cookies.txt',
+        # تم تعطيل الكوكيز لأنها تجبر المكتبة على استخدام الويب المحظور
+        # 'cookiefile': 'cookies.txt',
         
-        # التنكر كشاشة سمارت وموبايل أبل لكسر حظر الروبوت
+        # الاعتماد الكامل على عملاء الهواتف لتخطي حظر يوتيوب
         'extractor_args': {
             'youtube': {
-                'client': ['tv', 'ios', 'android'],
-                'player_client': ['tv', 'ios'],
-                'skip': ['dash', 'hls'],
-                'player_skip': ['js', 'configs'],
-                'js_runtimes': ['deno'],  # استخدم Deno
-                'remote_components': ['ejs:github'],  # حمل EJS من GitHub
+                'player_client': ['android', 'ios'],
             }
         },
+        
         'http_headers': {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'Accept-Language': 'en-us,en;q=0.5',
             'Sec-Fetch-Mode': 'navigate',
+            'Origin': 'https://www.youtube.com',
+            'Referer': 'https://www.youtube.com',
         },
         
         'outtmpl': 'downloads/%(id)s.%(ext)s',
-        'retries': 15,
-        'fragment_retries': 15,
+        'retries': 20,
+        'fragment_retries': 20,
+        'ratelimit': None,
+        'throttledratelimit': None,
+        'extractor_retries': 10,
+        'file_access_retries': 10,
     }
     
     if is_video:
@@ -102,21 +106,26 @@ def download_youtube_file(url, is_video=False):
         }]
         
     try:
-        # الكود هنا متزامن (Synchronous) عشان ميضربش كراش الـ Event Loop
+        print(f"🔄 جاري التحميل: {url}")
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             if not info:
+                print("❌ لا توجد معلومات عن الفيديو")
                 return None
             media_path = ydl.prepare_filename(info)
             if not is_video:
-                media_path = os.path.splitext(media_path)[0] + '.mp3'
+                if media_path.endswith('.m4a'):
+                    media_path = media_path.replace('.m4a', '.mp3')
+                elif not media_path.endswith('.mp3'):
+                    media_path = os.path.splitext(media_path)[0] + '.mp3'
+            print(f"✅ تم التحميل: {media_path}")
             return media_path
     except Exception as e:
-        print(f"Download Error (Bypass Failed): {e}")
+        print(f"❌ خطأ في التحميل: {e}")
         return None
 
 # ========================================================
-# دوال التخزين (بدون أي تعديل)
+# دوال التخزين
 # ========================================================
 
 async def get_cached_file_id(client, yt_id, is_video=False):
